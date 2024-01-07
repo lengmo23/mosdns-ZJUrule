@@ -98,6 +98,11 @@ plugins:
   - tag: main_sequence
     type: sequence
     args:
+      - matches: qname &/etc/mosdns/rule/ZJU-list.txt
+        exec: $forward_ZJU
+      - matches: has_resp
+        exec: accept
+        
       - exec: $hosts
       - matches: has_resp
         exec: accept
@@ -128,10 +133,7 @@ plugins:
       - matches: has_resp
         exec: goto gfw-list
       
-      - matches: qname &/etc/mosdns/rule/ZJU-list.txt
-        exec: $forward_ZJU
-      - matches: has_resp
-        exec: accept
+
 
       - exec: $fallback
 
