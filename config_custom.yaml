@@ -23,15 +23,17 @@ plugins:
     args:
       concurrent: 2
       upstreams:
-        - addr: udp://114.114.114.114
-        - addr: udp://223.5.5.5
+        - addr: tcp://114.114.114.114
+        - addr: tcp://223.5.5.5
   
   # 转发至ZJUDNS
   - tag: forward_ZJU
     type: forward
     args:
+      concurrent: 2
       upstreams:
         - addr: udp://10.10.0.21
+        - addr: udp://10.10.2.21
  
 
   # 转发至国外DNS，并发查询
@@ -40,8 +42,24 @@ plugins:
     args:
       concurrent: 2
       upstreams:
-        - addr: tls://8.8.8.8
-        - addr: tcp://1.1.1.1
+        - tag: google_tls
+          addr: "tls://8.8.8.8"
+          dial_addr: "8.8.8.8"
+          bootstrap: "8.8.8.8"
+          bootstrap_version: 4
+          idle_timeout: 30
+          enable_pipeline: true
+          enable_http3: true
+          insecure_skip_verify: false
+        - tag: cloudflare_tls
+          addr: "tls://1.1.1.1"
+          dial_addr: "1.1.1.1"
+          bootstrap: "1.1.1.1"
+          bootstrap_version: 4
+          idle_timeout: 30
+          enable_pipeline: true
+          enable_http3: true
+          insecure_skip_verify: false
   
   # 自定义hosts
   - tag: hosts
@@ -56,7 +74,8 @@ plugins:
     args:
       files:
         - /etc/mosdns/rule/cn.txt
-        #- /etc/mosdns/myvpsip.txt
+        #- /etc/mosdns/myvpsip.txt  
+   
 
   # fallback的primary服务器,返回非国内ip则drop_resp
   - tag: local_sequence
@@ -93,6 +112,22 @@ plugins:
       - matches: "!resp_ip $local_ip"
         exec: ipset gfwlist,inet,24
       - exec: accept
+      
+  - tag: adslist
+    type: domain_set
+    args:
+      files:
+        - /etc/mosdns/rule/mosdns-adrules.txt
+        - /etc/mosdns/rule/reject-list.txt
+
+  - tag: directlists
+    type: domain_set
+    args:
+      files:
+        - /etc/mosdns/rule/direct-list.txt
+        - /etc/mosdns/rule/apple-cn.txt
+        - /etc/mosdns/rule/google-cn.txt
+ 
 
   # 主运行序列
   - tag: main_sequence
@@ -109,11 +144,11 @@ plugins:
       
       - matches: qtype 65
         exec: reject 3
-
-      - matches: qname &/etc/mosdns/rule/reject-list.txt #&/etc/mosdns/my-reject-list.txt
-        exec: reject
-
-      - exec: prefer_ipv4
+      
+      - matches: qname $adslist
+        exec: reject 3
+      
+      #- exec: prefer_ipv4
 
       - exec: $redirect
 
@@ -123,7 +158,7 @@ plugins:
       - matches: has_resp
         exec: accept
 
-      - matches: qname &/etc/mosdns/rule/direct-list.txt
+      - matches: qname $directlists
         exec: $forward_local
       - matches: has_resp
         exec: accept
