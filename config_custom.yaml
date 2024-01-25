@@ -117,7 +117,7 @@ plugins:
     type: domain_set
     args:
       files:
-        - /etc/mosdns/rule/mosdns-adrules.txt
+        - /etc/mosdns/rule/mosdns_adrules.txt
         - /etc/mosdns/rule/reject-list.txt
 
   - tag: directlists
