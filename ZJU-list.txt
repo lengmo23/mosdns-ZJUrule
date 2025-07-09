@@ -1,6 +1,6 @@
 zju.edu.cn
-cc98
-nexushd
+cc98.org
+nexushd.org
 icsr.wiki
 zjusec.com
 zjusec.net
@@ -8,4 +8,3 @@ zjusec.top
 zjusct.io
 zjueva.net
 zjuqsc.com
-chalaoshi
